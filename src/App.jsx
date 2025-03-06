@@ -3,15 +3,11 @@ import { Canvas } from '@react-three/fiber'
 import { Environment, OrbitControls, useGLTF, PerspectiveCamera } from '@react-three/drei'
 import { TbView360Number } from "react-icons/tb";
 import { AxesHelper } from 'three'
-import { ReactLenis, useLenis } from 'lenis/react'
 import gsap from 'gsap'
 import Navbar from './components/navbar'
 import { IoIosArrowRoundForward } from "react-icons/io";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 import { IoIosArrowRoundBack } from "react-icons/io";
-import Card from './components/card';
-
-
 
 function AxisHelper() {
   const ref = useRef()
@@ -33,7 +29,7 @@ function Scene() {
 
     <>
 
-      <primitive object={scene} scale={0.15} position={[0, 0, 2]}
+      <primitive object={scene} scale={[0.2, 0.2, 0.2]} position={[0, -0.15, 0]}
         rotation={[null, -90 * (Math.PI / 180), null]}
       />
 
@@ -52,11 +48,9 @@ function CameraControl({ cameraref }) {
 
 }
 
-
 function App() {
   const cameraRef = useRef(null);
   const modelRef = useRef(null);
-  const cardRef = useRef([])
   const btnRef = useRef([])
   const btn2 = useRef(null)
   const textref = useRef(null)
@@ -76,8 +70,6 @@ function App() {
   useEffect(() => {
 
     if (!modelRef.current || !textref.current) return
-
-    const model = modelRef.current.children[0]
 
     const text = textref.current
 
@@ -115,21 +107,6 @@ function App() {
 
   }, [])
 
-
-
-  const lenis = useLenis()
-
-  const arr = [
-    {
-      ttl: 'Unstoppable Power',
-      txt: 'With an armored exoskeleton and AI-driven aerodynamics, the Dark Sentinel dominates the streets. Built for speed, stealth, and precision.'
-    },
-    {
-      ttl: 'The Future of Speed',
-      txt: 'Futuristic design, turbo thrusters, and AI navigation make the Cyber Vortex a force to be reckoned with. race at full throttle—the future is in your hands.'
-    },
-  ]
-
   const btns = [
     {
       fnc: moveleft,
@@ -146,9 +123,9 @@ function App() {
   ]
 
   function exit() {
-    if (!btnRef.current || !cardRef.current || !modelRef.current) return
+    if (!btnRef.current || !modelRef.current) return
     const btnref = btnRef.current
-    const cardref = cardRef.current
+    // const cardref = cardRef.current
     const model = modelRef.current.children[0]
 
     const ctx = gsap.context(() => {
@@ -172,22 +149,10 @@ function App() {
 
       })
 
-      cardref.forEach(e => {
-
-        tl.to(e, {
-          opacity: 1,
-          display: 'block',
-          duration: 0.2,
-          delay: 0.1,
-
-        }, 0)
-
-      })
-
       tl.to(model.scale, {
-        x: 0.15,
-        y: 0.15,
-        z: 0.15,
+        x: 0.2,
+        y: 0.2,
+        z: 0.2,
       }, 0)
 
       tl.to(model.position, {
@@ -215,9 +180,8 @@ function App() {
   }
 
   function move360() {
-    if (!btnRef.current || !cardRef.current || !modelRef.current) return
+    if (!btnRef.current || !modelRef.current) return
     const btnref = btnRef.current
-    const cardref = cardRef.current
     const model = modelRef.current.children[0]
 
     const ctx = gsap.context(() => {
@@ -234,20 +198,10 @@ function App() {
 
       })
 
-      cardref.forEach(e => {
-
-        tl.to(e, {
-          opacity: 0,
-          duration: 0.2,
-          display: 'none'
-        }, 0)
-
-      })
-
       tl.to(model.scale, {
-        x: 0.2,
-        y: 0.2,
-        z: 0.2
+        x: 0.25,
+        y: 0.25,
+        z: 0.25
       }, 0)
 
       tl.to(btn2.current, {
@@ -306,26 +260,12 @@ function App() {
   }
 
   return (
-    <ReactLenis root>
+    <>
 
       <Navbar />
 
       <div className='h-screen w-full z-10 flex items-end'>
 
-        <div className='space-y-5 pl-10 pb-10 z-10'>
-
-          {
-            arr.map((elem, i) => (
-
-              <span key={i} className='block' ref={el => cardRef.current[i] = el}>
-                <Card ttl={elem.ttl} txt={elem.txt} />
-              </span>
-
-            ))
-
-          }
-
-        </div>
 
         <div className='absolute bottom-16 left-1/2 z-10 -translate-x-1/2 flex gap-10'>
 
@@ -368,7 +308,6 @@ function App() {
 
           <Canvas gl={{ antialias: true }}>
 
-
             <CameraControl cameraref={cameraRef} />
 
             <Environment
@@ -396,7 +335,7 @@ function App() {
 
       </div>
 
-    </ReactLenis >
+    </ >
   )
 }
 
