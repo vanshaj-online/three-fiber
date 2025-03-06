@@ -1,14 +1,13 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
 import { Environment, OrbitControls, useGLTF, PerspectiveCamera } from '@react-three/drei'
-import { useControls } from 'leva'
-import * as THREE from 'three';
-import { AxesHelper, TextureLoader } from 'three'
+import { TbView360Number } from "react-icons/tb";
+import { AxesHelper } from 'three'
 import { ReactLenis, useLenis } from 'lenis/react'
 import gsap from 'gsap'
 import Navbar from './components/navbar'
-import Button from './components/button';
 import { IoIosArrowRoundForward } from "react-icons/io";
+import { IoArrowBackCircleOutline } from "react-icons/io5";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import Card from './components/card';
 
@@ -30,40 +29,12 @@ function Scene() {
 
   const { scene } = useGLTF('/car2.glb')
 
-  const allmesh = scene.children[0].children[0].children[0]
-
-  allmesh.traverse(e => {
-    console.log(e)
-  })
-
-  const { x, y, z, scale } = useControls('Position', {
-    x: { value: 0, min: -20, max: 10, step: 0.1 },
-    y: { value: -0.2, min: -20, max: 2, step: 0.1 },
-    z: { value: 0.5, min: -10, max: 10, step: 1 },
-    scale: { value: 0.15, min: -1, max: 10, step: 0.05 },
-  })
-
-  const { px, py, pz } = useControls('camera', {
-    x: { value: 0, min: -10, max: 10, steps: 0.5 },
-    y: { value: 0, min: -10, max: 10, steps: 0.5 },
-    z: { value: 2, min: -10, max: 10, steps: 0.5 },
-  })
-
-  const { Rx, Ry, Rz } = useControls('Rotation', {
-    Rx: { value: -0.5, min: -Math.PI, max: Math.PI, step: 0.1 },
-    Ry: { value: 2.0, min: -10, max: 10, step: 0.1 },
-    Rz: { value: -0.4, min: -10, max: 10, step: 0.1 },
-  })
-
-
-
   return (
 
     <>
 
-      <primitive object={scene} scale={scale} position={[x, y, z]}
+      <primitive object={scene} scale={0.15} position={[0, 0, 2]}
         rotation={[null, -90 * (Math.PI / 180), null]}
-      // rotation={[Rx, Ry, Rz]}
       />
 
     </>
@@ -73,25 +44,9 @@ function Scene() {
 
 function CameraControl({ cameraref }) {
 
-
-
-  const { x, y, z } = useControls("Camera Position", {
-    x: { value: 0, min: -10, max: 10, step: 0.1 },
-    y: { value: 0, min: -10, max: 10, step: 0.1 },
-    z: { value: 1.7, min: -10, max: 10, step: 0.1 },
-  });
-
-  const { Rx, Ry, Rz } = useControls('camera Rotation', {
-    Rx: { value: 0, min: -Math.PI, max: Math.PI, step: 0.1 },
-    Ry: { value: 0, min: -10, max: 10, step: 0.1 },
-    Rz: { value: 0, min: -10, max: 10, step: 0.1 },
-  })
-
-
-
   return (
     <>
-      <PerspectiveCamera ref={cameraref} makeDefault position={[x, y, z]} rotation={[Rx, Ry, Rz]} />;
+      <PerspectiveCamera ref={cameraref} makeDefault position={[0, 0, 1.7]} rotation={[0, 0, 0]} />;
     </>
   )
 
@@ -101,16 +56,68 @@ function CameraControl({ cameraref }) {
 function App() {
   const cameraRef = useRef(null);
   const modelRef = useRef(null);
+  const cardRef = useRef([])
+  const btnRef = useRef([])
+  const btn2 = useRef(null)
+  const textref = useRef(null)
 
   const [isAnimating, setisAnimating] = useState(false)
 
-  const lenis = useLenis()
+  const [showBackbtn, setshowBackbtn] = useState(false)
 
-  const { Rx, Ry, Rz } = useControls('group rotation', {
-    Rx: { value: 0, min: -Math.PI, max: Math.PI, step: 0.1 },
-    Ry: { value: 0, min: -10, max: 10, step: 0.1 },
-    Rz: { value: 0, min: -10, max: 10, step: 0.1 },
-  })
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+
+    setTimeout(() => setIsReady(true), 700);
+
+  }, []);
+
+  useEffect(() => {
+
+    if (!modelRef.current || !textref.current) return
+
+    const model = modelRef.current.children[0]
+
+    const text = textref.current
+
+    const handleMouseMove = (e) => {
+
+      const xmove = (e.clientX / window.innerWidth) * 50
+
+      const ymove = (e.clientY / window.innerHeight) * 50
+
+      gsap.to(text, {
+        x: -xmove,
+        y: -ymove,
+        duration: 0.6,
+        ease: 'power4'
+      })
+
+    };
+
+    window.addEventListener('mousemove', handleMouseMove)
+
+    return () => {
+
+      window.removeEventListener('mousemove', handleMouseMove)
+
+    }
+
+  }, [isReady])
+
+  useLayoutEffect(() => {
+
+    if (btn2.current) {
+      gsap.set(btn2.current, { display: 'none', opacity: 0 })
+    }
+
+
+  }, [])
+
+
+
+  const lenis = useLenis()
 
   const arr = [
     {
@@ -123,6 +130,138 @@ function App() {
     },
   ]
 
+  const btns = [
+    {
+      fnc: moveleft,
+      icon: <IoIosArrowRoundBack className={`${isAnimating ? 'text-white/20' : 'text-white/80'}`} size='2rem' />
+    },
+    {
+      fnc: moveright,
+      icon: <IoIosArrowRoundForward className={`${isAnimating ? 'text-white/20' : 'text-white/80'}`} size='2rem' />
+    },
+    {
+      fnc: move360,
+      icon: <TbView360Number className={`${isAnimating ? 'text-white/20' : 'text-white/80'}`} size='2rem' />
+    },
+  ]
+
+  function exit() {
+    if (!btnRef.current || !cardRef.current || !modelRef.current) return
+    const btnref = btnRef.current
+    const cardref = cardRef.current
+    const model = modelRef.current.children[0]
+
+    const ctx = gsap.context(() => {
+
+      const tl = gsap.timeline()
+
+      tl.to(btn2.current, {
+        opacity: 0,
+        display: "none",
+        duration: 0.1
+      })
+
+      btnref.forEach(e => {
+
+        tl.to(e, {
+          opacity: 1,
+          display: 'block',
+          duration: 0.2,
+          delay: 0.1
+        }, 0)
+
+      })
+
+      cardref.forEach(e => {
+
+        tl.to(e, {
+          opacity: 1,
+          display: 'block',
+          duration: 0.2,
+          delay: 0.1,
+
+        }, 0)
+
+      })
+
+      tl.to(model.scale, {
+        x: 0.15,
+        y: 0.15,
+        z: 0.15,
+      }, 0)
+
+      tl.to(model.position, {
+        x: -0.1, y: -0.2,
+        duration: 1,
+        ease: 'power4.out'
+      }, 0);
+
+      tl.to(cameraRef.current.position, {
+        x: 0, y: 0, z: 1.7,
+        duration: 1,
+        ease: 'power4.out'
+      }, 0);
+
+      tl.to(cameraRef.current.rotation, {
+        x: 0, y: 0, z: 0,
+        duration: 1,
+        ease: 'power4.out'
+      }, 0);
+
+    })
+
+    setshowBackbtn(false)
+    return () => ctx.revert()
+  }
+
+  function move360() {
+    if (!btnRef.current || !cardRef.current || !modelRef.current) return
+    const btnref = btnRef.current
+    const cardref = cardRef.current
+    const model = modelRef.current.children[0]
+
+    const ctx = gsap.context(() => {
+
+      const tl = gsap.timeline()
+
+      btnref.forEach(e => {
+
+        tl.to(e, {
+          opacity: 0,
+          duration: 0.2,
+          display: 'none'
+        }, 0)
+
+      })
+
+      cardref.forEach(e => {
+
+        tl.to(e, {
+          opacity: 0,
+          duration: 0.2,
+          display: 'none'
+        }, 0)
+
+      })
+
+      tl.to(model.scale, {
+        x: 0.2,
+        y: 0.2,
+        z: 0.2
+      }, 0)
+
+      tl.to(btn2.current, {
+        opacity: 1,
+        display: 'block'
+      })
+
+    })
+
+    setshowBackbtn(true)
+
+    return () => ctx.revert()
+  }
+
   function moveleft() {
     if (!modelRef.current) {
       console.log('model not found')
@@ -131,7 +270,7 @@ function App() {
     setisAnimating(true)
 
     gsap.to(modelRef.current.children[0].rotation, {
-      y: `+=${(Math.PI / 2)}`,
+      y: `+=${-(Math.PI / 2)}`,
       duration: 1.5,
       ease: 'power4.out',
       onUpdate: () => {
@@ -152,7 +291,7 @@ function App() {
     }
     setisAnimating(true)
     gsap.to(modelRef.current.children[0].rotation, {
-      y: `+=${-(Math.PI / 2)}`,
+      y: `+=${(Math.PI / 2)}`,
       duration: 1.5,
       ease: 'power4.out',
       onUpdate: () => {
@@ -166,8 +305,6 @@ function App() {
     })
   }
 
-  const wrapperRef = useRef(null)
-
   return (
     <ReactLenis root>
 
@@ -176,33 +313,42 @@ function App() {
       <div className='h-screen w-full z-10 flex items-end'>
 
         <div className='space-y-5 pl-10 pb-10 z-10'>
+
           {
             arr.map((elem, i) => (
 
-              <Card ttl={elem.ttl} txt={elem.txt} key={i} />
+              <span key={i} className='block' ref={el => cardRef.current[i] = el}>
+                <Card ttl={elem.ttl} txt={elem.txt} />
+              </span>
 
             ))
 
           }
+
         </div>
 
         <div className='absolute bottom-16 left-1/2 z-10 -translate-x-1/2 flex gap-10'>
 
-          <button className='p-4 rounded-full bg-white/5 backdrop-blur-sm cursor-pointer'
-            onClick={moveleft}
-            disabled={isAnimating}
+          {
+            btns.map((btn, index) => (
+
+              <button ref={el => btnRef.current[index] = el} key={index} className='p-4 rounded-full aspect-square h-auto w-auto bg-white/5 backdrop-blur-sm cursor-pointer hover:bg-white/10 transition-colors duration-300'
+                onClick={btn.fnc}
+                disabled={isAnimating}
+              >
+
+                {btn.icon}
+
+              </button>
+
+            ))
+          }
+
+          <button ref={btn2} className='p-1 px-5 rounded-full aspect-square h-auto w-auto bg-white/5 backdrop-blur-sm cursor-pointer hover:bg-white/10 transition-colors duration-300'
+            onClick={exit}
           >
 
-            <IoIosArrowRoundBack className={`${isAnimating ? 'text-white/20' : 'text-white/80'}`} size='2rem' />
-
-          </button>
-
-          <button className='p-4 rounded-full bg-white/5 backdrop-blur-sm cursor-pointer'
-            onClick={moveright}
-            disabled={isAnimating}
-          >
-
-            <IoIosArrowRoundForward className={`${isAnimating ? 'text-white/20' : 'text-white/80'}`} size='2rem' />
+            <IoArrowBackCircleOutline className={`text-white/80`} size='1.7rem' />
 
           </button>
 
@@ -210,9 +356,9 @@ function App() {
 
         <div className='absolute top-[45%] left-1/2 -translate-1/2 '>
 
-          <p className='text-center uppercase text-white'>pushing the limits </p>
+          <p className='text-center uppercase text-white'>pushing the limits</p>
 
-          <h1 className=' text-[#fff]/10 uppercase tracking-tight future text-center' >
+          <h1 ref={textref} className=' text-[#fff]/10 uppercase tracking-tight future text-center' >
             cyberx
           </h1>
 
@@ -222,7 +368,6 @@ function App() {
 
           <Canvas gl={{ antialias: true }}>
 
-            {/* <OrbitControls enableZoom={false} /> */}
 
             <CameraControl cameraref={cameraRef} />
 
@@ -231,11 +376,11 @@ function App() {
               environmentIntensity={1}
             />
 
-            {/* <AxisHelper /> */}
-
             <Suspense fallback={<>Loading...</>}>
 
-              <group ref={modelRef} rotation={[Rx,Ry,Rz]}>
+              {showBackbtn && <OrbitControls enableZoom={false} />}
+
+              <group ref={modelRef} >
 
                 <Scene />
 
